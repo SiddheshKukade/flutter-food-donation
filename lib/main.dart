@@ -5,7 +5,7 @@ import 'package:flutterapk/screens/donar_screen.dart';
 import 'package:flutterapk/screens/donarhome_screen.dart';
 import 'package:flutterapk/screens/home_screen.dart';
 import 'package:flutterapk/screens/signin_screen.dart';
-
+import 'package:flutterapk/screens/profile_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,7 +13,6 @@ void main() async {
 
   runApp(const MainApp());
 }
-
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
@@ -22,8 +21,6 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       title: 'Food waste',
       theme: ThemeData(primarySwatch:Colors.blue),
-      home: const SignInScreen(),
+      home:  const SignInScreen(),
     );
   } }
-
-

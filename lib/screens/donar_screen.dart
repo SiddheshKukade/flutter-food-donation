@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:flutterapk/screens/donarhome_screen.dart';
 import 'dart:io';
@@ -28,6 +26,46 @@ class _DonarScreenState extends State<DonarScreen> {
 
   File? _foodImage;
 
+// This function will add/update the user and also add request data
+  Future<void> submitDonation() async {
+    try {
+//add user
+      DocumentReference docRef =
+          FirebaseFirestore.instance.collection('users').doc();
+
+      await docRef.set({
+        'name': _nameController.text,
+        'mob': _mobileController.text,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Profile created successfully!')),
+      );
+
+      DocumentReference docRef2 =
+          FirebaseFirestore.instance.collection('request').doc();
+
+      await docRef2.set({
+        'title': _nameController.text,
+        'desc': _mobileController.text,
+        'qty': _quantityController.text,
+        'expiry': _expiryDateController.text,
+        'address': _addressController.text,
+        'pincode': _pinCodeController.text,
+        'pickup': false
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Request Created successfully!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error creating profile: $e')),
+      );
+    }
+  }
+
   Future<void> _pickExpiryDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -38,13 +76,15 @@ class _DonarScreenState extends State<DonarScreen> {
 
     if (pickedDate != null) {
       setState(() {
-        _expiryDateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
+        _expiryDateController.text =
+            DateFormat('yyyy-MM-dd').format(pickedDate);
       });
     }
   }
 
   Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
       setState(() {
@@ -65,7 +105,9 @@ class _DonarScreenState extends State<DonarScreen> {
       final RegExp dateRegex = RegExp(r'^\d{4}-\d{2}-\d{2}$');
       if (!dateRegex.hasMatch(_expiryDateController.text)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Please select a valid expiry date in YYYY-MM-DD format.")),
+          SnackBar(
+              content: Text(
+                  "Please select a valid expiry date in YYYY-MM-DD format.")),
         );
         return;
       }
@@ -74,14 +116,16 @@ class _DonarScreenState extends State<DonarScreen> {
         context: context,
         builder: (context) => AlertDialog(
           title: Text("Confirm Submission"),
-          content: Text("Are you sure you want to submit the food donation details?"),
+          content: Text(
+              "Are you sure you want to submit the food donation details?"),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text("Cancel"),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
+                await submitDonation();
                 Navigator.pop(context);
 
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -91,7 +135,9 @@ class _DonarScreenState extends State<DonarScreen> {
                 // Redirect to HomeScreen
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => DonarHomeScreen()), // Redirecting to HomeScreen
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          DonarHomeScreen()), // Redirecting to HomeScreen
                 );
               },
               child: Text("Confirm"),
@@ -118,7 +164,8 @@ class _DonarScreenState extends State<DonarScreen> {
             padding: const EdgeInsets.all(16.0),
             child: SingleChildScrollView(
               child: Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15)),
                 elevation: 5,
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
@@ -129,37 +176,46 @@ class _DonarScreenState extends State<DonarScreen> {
                       children: [
                         Text(
                           "Food Donation Form",
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 24, fontWeight: FontWeight.bold),
                         ),
                         SizedBox(height: 20),
-
-                        _buildTextField(_nameController, "Full Name", Icons.person),
-                        _buildTextField(_mobileController, "Mobile No", Icons.phone, keyboardType: TextInputType.phone),
-                        _buildTextField(_foodNameController, "Food Name", Icons.fastfood),
-                        _buildTextField(_quantityController, "Food Quantity (kg)", Icons.scale, keyboardType: TextInputType.number),
-
+                        _buildTextField(
+                            _nameController, "Full Name", Icons.person),
+                        _buildTextField(
+                            _mobileController, "Mobile No", Icons.phone,
+                            keyboardType: TextInputType.phone),
+                        _buildTextField(
+                            _foodNameController, "Food Name", Icons.fastfood),
+                        _buildTextField(_quantityController,
+                            "Food Quantity (kg)", Icons.scale,
+                            keyboardType: TextInputType.number),
                         GestureDetector(
                           onTap: () => _pickExpiryDate(context),
                           child: AbsorbPointer(
-                            child: _buildTextField(_expiryDateController, "Food Expiry Date", Icons.date_range),
+                            child: _buildTextField(_expiryDateController,
+                                "Food Expiry Date", Icons.date_range),
                           ),
                         ),
-
-                        _buildTextField(_addressController, "Pickup Address", Icons.location_on, maxLines: 2),
-                        _buildTextField(_pinCodeController, "Pin Code", Icons.pin, keyboardType: TextInputType.number),
-
+                        _buildTextField(_addressController, "Pickup Address",
+                            Icons.location_on,
+                            maxLines: 2),
+                        _buildTextField(
+                            _pinCodeController, "Pin Code", Icons.pin,
+                            keyboardType: TextInputType.number),
                         SizedBox(height: 15),
-
                         Column(
                           children: [
                             Text(
                               "Upload Food Image",
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
                             ),
                             SizedBox(height: 10),
                             _foodImage != null
                                 ? Image.file(_foodImage!, height: 150)
-                                : Icon(Icons.image, size: 100, color: Colors.grey),
+                                : Icon(Icons.image,
+                                    size: 100, color: Colors.grey),
                             SizedBox(height: 10),
                             ElevatedButton.icon(
                               onPressed: _pickImage,
@@ -167,22 +223,27 @@ class _DonarScreenState extends State<DonarScreen> {
                               label: Text("Choose Image"),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blueGrey,
-                                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10)),
                               ),
                             ),
                           ],
                         ),
-
                         SizedBox(height: 20),
                         ElevatedButton(
                           onPressed: _submitForm,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green.shade800,
-                            padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 40, vertical: 15),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
                           ),
-                          child: Text("Submit Donation", style: TextStyle(fontSize: 18, color: Colors.white)),
+                          child: Text("Submit Donation",
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.white)),
                         ),
                       ],
                     ),
@@ -196,7 +257,9 @@ class _DonarScreenState extends State<DonarScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon, {TextInputType keyboardType = TextInputType.text, int maxLines = 1}) {
+  Widget _buildTextField(
+      TextEditingController controller, String label, IconData icon,
+      {TextInputType keyboardType = TextInputType.text, int maxLines = 1}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
@@ -220,10 +283,3 @@ class _DonarScreenState extends State<DonarScreen> {
     );
   }
 }
-
-
-
-
-
-
-

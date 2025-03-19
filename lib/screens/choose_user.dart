@@ -11,6 +11,21 @@ class chooseUser extends StatefulWidget {
 }
 
 class _chooseUserState extends State<chooseUser> {
+  void _showInfoDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
      return Scaffold(
@@ -49,12 +64,12 @@ class _chooseUserState extends State<chooseUser> {
                 ),
               ),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.volunteer_activism, color: Colors.white), // Icon
-                  SizedBox(width: 10),
-                  Text('Donor', style: TextStyle(fontSize: 22, color: Colors.white)),
-                ],
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.volunteer_activism, color: Colors.white),
+                      SizedBox(width: 10),
+                      Text('Collect Food', style: TextStyle(fontSize: 22, color: Colors.white)),
+                  ],
               ),
             ),
 
@@ -80,7 +95,7 @@ class _chooseUserState extends State<chooseUser> {
                 children: [
                   Icon(Icons.group, color: Colors.white), // Icon
                   SizedBox(width: 10),
-                  Text('NGO', style: TextStyle(fontSize: 22, color: Colors.white)),
+                  Text('Donate Food', style: TextStyle(fontSize: 22, color: Colors.white)),
                 ],
               ),
             ),

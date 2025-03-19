@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutterapk/screens/Ngo_food.dart';
 
@@ -33,13 +34,38 @@ class _NgoScreenState extends State<NgoScreen> {
   final _addressController = TextEditingController();
   String _areaOfOperation = 'Select Area';
 
-  List<String> _areasOfOperation = [
-    'Select Area',
-    'Education',
-    'Healthcare',
-    'Food Distribution',
-    'Animal Welfare'
+   List<String> _areasOfOperation = [
+    'Rural',
+    'Urban',
+    'Sub-Urban',
   ];
+
+// This function will add/update the user and also add request data
+  Future<void> createNgo() async {
+    try {
+//add user
+      DocumentReference docRef =
+          FirebaseFirestore.instance.collection('ngo').doc();
+      await docRef.set({
+        'name': _ngoNameController.text,
+        'reg_no': _registrationNumberController.text,
+        'poc_name': _contactPersonController.text,
+        'poc_no': _phoneNumberController.text,
+        'email': _emailController.text,
+        'address': _addressController.text,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('NGO created successfully!')),
+      );
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error creating profile: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -168,36 +194,37 @@ class _NgoScreenState extends State<NgoScreen> {
                   },
                 ),
                 SizedBox(height: 10),
-                DropdownButtonFormField<String>(
-                  value: _areaOfOperation,
-                  items: _areasOfOperation.map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _areaOfOperation = newValue!;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    labelText: 'Area of Operation',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == 'Select Area') {
-                      return 'Please select an area of operation';
-                    }
-                    return null;
-                  },
-                ),
+                // DropdownButtonFormField<String>(
+                //   value: _areaOfOperation,
+                //   items: _areasOfOperation.map((String value) {
+                //     return DropdownMenuItem<String>(
+                //       value: value,
+                //       child: Text(value),
+                //     );
+                //   }).toList(),
+                //   onChanged: (String? newValue) {
+                //     setState(() {
+                //       _areaOfOperation = newValue!;
+                //     });
+                //   },
+                //   decoration: InputDecoration(
+                //     labelText: 'Area of Operation',
+                //     filled: true,
+                //     fillColor: Colors.white,
+                //     border: OutlineInputBorder(),
+                //   ),
+                //   validator: (value) {
+                //     if (value == 'Select Area') {
+                //       return 'Please select an area of operation';
+                //     }
+                //     return null;
+                //   },
+                // ),
                 SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async{
                     if (_formKey.currentState!.validate()) {
+                      await createNgo();
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
@@ -221,18 +248,3 @@ class _NgoScreenState extends State<NgoScreen> {
 }
 
 // ... (NGOFoodDisplayScreen and NGOHomeScreen remain the same)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
