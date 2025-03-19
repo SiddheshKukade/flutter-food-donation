@@ -114,20 +114,7 @@
 //   }
 // }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -146,12 +133,14 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-class DonarHomeScreen extends StatelessWidget {
+ class DonarHomeScreen extends StatelessWidget {
   const DonarHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final CollectionReference usersCollection =
+        FirebaseFirestore.instance.collection('ngo');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Food Waste Management"),
@@ -174,16 +163,13 @@ class DonarHomeScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: ListTile(
-                leading: const CircleAvatar(
-                  backgroundImage: AssetImage('assets/user.png'), // Add your profile image here
-                ),
                 title: Text(
-                  "Hi Mandeep",
+                  "Hi Donor",
                   style: GoogleFonts.poppins(
                       fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                subtitle: const Text("You are a Donor - Super Donor"),
-                trailing: const Icon(Icons.verified, color: Colors.green),
+                subtitle:
+                    const Text("You are a Donor, you can create requests"),
               ),
             ),
 
@@ -278,37 +264,6 @@ class DonarHomeScreen extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            // Donation History
-            Card(
-              elevation: 3,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Donation History",
-                      style: GoogleFonts.poppins(
-                          fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 5),
-                    ListTile(
-                      leading: const Icon(Icons.history, color: Colors.orange),
-                      title: const Text("Rice Bowl with Curry"),
-                      subtitle: const Text("10 Plates | Non-Veg"),
-                      trailing: const Icon(Icons.check_circle,
-                          color: Colors.green),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
             // NGOs Nearby
             Card(
               elevation: 3,
@@ -326,18 +281,70 @@ class DonarHomeScreen extends StatelessWidget {
                           fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 5),
-                    ListTile(
-                      leading: const Icon(Icons.location_on,
-                          color: Colors.blue),
-                      title: const Text("NGO Name 1"),
-                      subtitle: const Text("2.5 km away"),
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.location_on,
-                          color: Colors.blue),
-                      title: const Text("NGO Name 2"),
-                      subtitle: const Text("3 km away"),
-                    ),
+                    StreamBuilder<QuerySnapshot>(
+                      stream: usersCollection.snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
+                        if (snapshot.hasError) {
+                          return Center(
+                              child: Text('Error: ${snapshot.error}'));
+                        }
+                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                          return const Center(child: Text('No NGOs found'));
+                        }
+
+                        List<QueryDocumentSnapshot> ngos = snapshot.data!.docs;
+
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: ngos.length,
+                          itemBuilder: (context, index) {
+                            Map<String, dynamic> ngoData =
+                                ngos[index].data() as Map<String, dynamic>;
+                            String docId = ngos[index].id;
+
+                            return Card(
+                              margin: const EdgeInsets.all(8),
+                              child: ListTile(
+                                title: Text(ngoData['name'] ?? 'No Name'),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                        'Address: ${ngoData['address'] ?? 'No Address'}'),
+                                    Text(
+                                        'Area of Operation: ${ngoData['area_of_operation'] ?? 'No Area'}'),
+                                    Text(
+                                        'Created At: ${ngoData['createdAt'] ?? 'No Date'}'),
+                                    Text(
+                                        'Email: ${ngoData['email'] ?? 'No Email'}'),
+                                    Text(
+                                        'POC Name: ${ngoData['poc_name'] ?? 'No POC Name'}'),
+                                    Text(
+                                        'POC No: ${ngoData['poc_no'] ?? 'No POC No'}'),
+                                    Text(
+                                        'Reg No: ${ngoData['reg_no'] ?? 'No Reg No'}'),
+                                  ],
+                                ),
+                                // trailing: ElevatedButton(
+                                //   onPressed: () async {
+                                //     await usersCollection
+                                //         .doc(docId)
+                                //         .update({'approved': true});
+                                //   },
+                                //   child: const Text('Approve'),
+                                // ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    )
                   ],
                 ),
               ),
@@ -373,7 +380,6 @@ class DonarHomeScreen extends StatelessWidget {
         ),
       ),
 
-      // Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
@@ -385,15 +391,3 @@ class DonarHomeScreen extends StatelessWidget {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-

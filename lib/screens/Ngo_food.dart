@@ -1,7 +1,5 @@
-
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
 
 class NGOFoodDisplayScreen extends StatefulWidget {
   @override
@@ -47,6 +45,9 @@ class _NGOFoodDisplayScreenState extends State<NGOFoodDisplayScreen> {
     // Implement backend logic to update request status
   }
 
+  final CollectionReference usersCollection =
+      FirebaseFirestore.instance.collection('request');
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,66 +64,76 @@ class _NGOFoodDisplayScreenState extends State<NGOFoodDisplayScreen> {
         ),
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade100, Colors.blue.shade200],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade100, Colors.blue.shade200],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
           ),
-        ),
-        child: ListView.builder(
-          itemCount: foodItems.length,
-          itemBuilder: (context, foodIndex) {
-            final item = foodItems[foodIndex];
-            return Card(
-              margin: EdgeInsets.all(8.0),
-              child: ExpansionTile(
-                title: Text(item['name']),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Quantity: ${item['quantity']}'),
-                    Text('Date: ${item['date']}'),
-                  ],
-                ),
-                children: [
-                  if (item['requests'] != null && item['requests'].isNotEmpty)
-                    ...item['requests'].map((request) {
-                      return ListTile(
-                        title: Text('Request from: ${request['ngoName']}'),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (request['accepted'] == null)
-                              IconButton(
-                                icon: Icon(Icons.check, color: Colors.green),
-                                onPressed: () => _acceptRequest(foodIndex, item['requests'].indexOf(request)),
-                              ),
-                            if (request['accepted'] == null)
-                              IconButton(
-                                icon: Icon(Icons.close, color: Colors.red),
-                                onPressed: () => _rejectRequest(foodIndex, item['requests'].indexOf(request)),
-                              ),
-                            if(request['accepted'] != null)
-                              Icon(request['accepted'] == true ? Icons.check_circle : Icons.cancel, color: request['accepted'] == true ? Colors.green : Colors.red),
-                          ],
-                        ),
-                      );
-                    }).toList()
-                  else
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text('No requests for this item.'),
+          child: StreamBuilder<QuerySnapshot>(
+            stream: usersCollection.snapshots(), // Listen for real-time updates
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(
+                    child: CircularProgressIndicator()); // Loading indicator
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: \${snapshot.error}'));
+              }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return Center(child: Text('No users found'));
+              }
+
+              // Convert Firestore documents to a list
+              List<QueryDocumentSnapshot> users = snapshot.data!.docs;
+
+              return ListView.builder(
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  Map<String, dynamic> userData =
+                      users[index].data() as Map<String, dynamic>;
+                  String docId = users[index].id;
+
+                  return Card(
+                    margin: EdgeInsets.all(8),
+                    child: ListTile(
+                      title: Text(userData['title'] ?? 'No Title'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                              'Address: ${userData['address'] ?? 'No Address'}'),
+                          Text(
+                              'Description: ${userData['desc'] ?? 'No Description'}'),
+                          Text('Expiry: ${userData['expiry'] ?? 'No Expiry'}'),
+                          Text(
+                              'Pincode: ${userData['pincode'] ?? 'No Pincode'}'),
+                          Text('Quantity: ${userData['qty'] ?? 'No Quantity'}'),
+                          Text(
+                              'Pickup: ${userData['pickup'] == true ? "Approved" : "Pending"}'),
+                        ],
+                      ),
+                      trailing: userData['pickup'] == false
+                          ? ElevatedButton(
+                              onPressed: () async {
+                                await usersCollection
+                                    .doc(docId)
+                                    .update({'pickup': true});
+                              },
+                              child: Text('Accep'),
+                            )
+                          : Icon(Icons.check, color: Colors.green),
                     ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
+                  );
+                },
+              );
+            },
+          )),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => NGOHomeScreen()));
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => NGOHomeScreen()));
         },
         child: Icon(Icons.home),
         backgroundColor: Colors.blue,
@@ -142,13 +153,17 @@ class NGOHomeScreen extends StatelessWidget {
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.food_bank), label: 'Food Items'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.food_bank), label: 'Food Items'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
           BottomNavigationBarItem(icon: Icon(Icons.logout), label: 'Log Out'),
         ],
         onTap: (int index) {
           if (index == 0) {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => NGOFoodDisplayScreen()));
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => NGOFoodDisplayScreen()));
           }
           // Add profile and logout functionality here
         },

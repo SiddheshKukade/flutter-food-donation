@@ -68,7 +68,7 @@ class _chooseUserState extends State<chooseUser> {
                     children: [
                       Icon(Icons.volunteer_activism, color: Colors.white),
                       SizedBox(width: 10),
-                      Text('Collect Food', style: TextStyle(fontSize: 22, color: Colors.white)),
+                      Text('Donor', style: TextStyle(fontSize: 22, color: Colors.white)),
                   ],
               ),
             ),
@@ -95,7 +95,7 @@ class _chooseUserState extends State<chooseUser> {
                 children: [
                   Icon(Icons.group, color: Colors.white), // Icon
                   SizedBox(width: 10),
-                  Text('Donate Food', style: TextStyle(fontSize: 22, color: Colors.white)),
+                  Text('NGO', style: TextStyle(fontSize: 22, color: Colors.white)),
                 ],
               ),
             ),
